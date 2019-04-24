@@ -2,6 +2,9 @@ import exampleVideoData from '../data/exampleVideoData.js';
 import VideoList from './VideoList.js';
 import VideoPlayer from './VideoPlayer.js';
 import Search from './Search.js';
+import searchYouTube from '../lib/searchYouTube.js';
+import YOUTUBE_API_KEY from '../config/youtube.js';
+
 
 class App extends React.Component {
   constructor(props) {
@@ -12,15 +15,45 @@ class App extends React.Component {
       currentVideo: exampleVideoData[0]
     };
 
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
     this.setVideoPlayerItem = this.setVideoPlayerItem.bind(this);
   }
 
+
+  getInitialState() {
+    return {
+      inputValue: ''
+    };
+  }
+
   setVideoPlayerItem(item) {
-    var oldVideos = this.state.videoList;
     this.setState({
-      videoList: oldVideos,
       currentVideo: item
     });
+  }
+
+  handleChange(evt) {
+    this.setState({ inputValue: evt.target.value });
+  }
+
+  handleSubmit(evt) {
+    this.getVideos();
+  }
+
+  getVideos() {
+    var options = {
+      key: YOUTUBE_API_KEY,
+      query: this.state.inputValue,
+      max: 5
+    };
+
+    searchYouTube(options, data => (
+      this.setState({
+        videoList: data,
+        currentVideo: data[0]
+      })
+    ));
   }
 
   render() {
@@ -28,7 +61,7 @@ class App extends React.Component {
       <div>
         <nav className="navbar">
           <div className="col-md-6 offset-md-3">
-            <Search />
+            <Search handleChange={this.handleChange} handleSubmit={this.handleSubmit} />
           </div>
         </nav>
         <div className="row">
@@ -37,14 +70,14 @@ class App extends React.Component {
           </div>
           <div className="col-md-5">
             <div>
-              <VideoList videos={this.state.videoList} videoClickCB={this.setVideoPlayerItem}/>
+              <VideoList videos={this.state.videoList} videoClickCB={this.setVideoPlayerItem} />
             </div>
           </div>
         </div>
       </div>
     );
   }
-};
+}
 
 
 // In the ES6 spec, files are "modules" and do not share a top-level scope
